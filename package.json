@@ -1,0 +1,18 @@
+{
+  "name": "iot-backend",
+  "version": "1.0.0",
+  "description": "The backend of the pig-iot-project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.3",
+    "mongodb": "^3.0.7",
+    "mosca": "^2.8.1",
+    "process": "^0.11.10"
+  }
+}
