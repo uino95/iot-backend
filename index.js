@@ -11,13 +11,14 @@ var mosca = require('mosca');
 
 ////////////////// SETTINGS /////////////////
 
-var url = "mongodb://localhost:27017/";
+var broker_url = "mongodb://mbare:ciao@ds239177.mlab.com:39177/broker_db";
+var mqtt_url = "mongodb://mbare:ciao@ds253959.mlab.com:53959/mqtt";
 var brokerDbo;
 
 var ascoltatore = {
   //using ascoltatore
   type: 'mongo',    
-  url: 'mongodb://localhost:27017/mqtt',
+  url: "mongodb://mbare:ciao@ds253959.mlab.com:53959/mqtt",
   pubsubCollection: 'ascoltatori',
   mongo: {}
 };
@@ -27,15 +28,15 @@ var moscaSettings = {
   backend: ascoltatore,
   persistence: {
     factory: mosca.persistence.Mongo,
-    url: 'mongodb://localhost:27017/mqtt'
+    url: "mongodb://mbare:ciao@ds253959.mlab.com:53959/mqtt"
   }
 };
 
 ///////////// Init Database /////////////////
 
-MongoClient.connect(url, function(err, db) {
+MongoClient.connect(broker_url, function(err, db) {
   if(err) throw err;
-  brokerDbo = db.db("brokerDb");
+  brokerDbo = db.db("broker_db");
   console.log("connected to broker db");
 })
 
