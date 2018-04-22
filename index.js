@@ -15,22 +15,22 @@ var broker_url = "mongodb://mbare:ciao@ds239177.mlab.com:39177/broker_db";
 var mqtt_url = "mongodb://mbare:ciao@ds253959.mlab.com:53959/mqtt";
 var brokerDbo;
 
-var ascoltatore = {
-  //using ascoltatore
-  type: 'mongo',    
-  url: "mongodb://mbare:ciao@ds253959.mlab.com:53959/mqtt",
-  pubsubCollection: 'ascoltatori',
-  mongo: {}
-};
+// var ascoltatore = {
+//   //using ascoltatore
+//   type: 'mongo',    
+//   url: "mongodb://mbare:ciao@ds253959.mlab.com:53959/mqtt",
+//   pubsubCollection: 'ascoltatori',
+//   mongo: {}
+// };
 
-var moscaSettings = {
-  port: 1883,
-  backend: ascoltatore,
-  persistence: {
-    factory: mosca.persistence.Mongo,
-    url: "mongodb://mbare:ciao@ds253959.mlab.com:53959/mqtt"
-  }
-};
+// var moscaSettings = {
+//   port: 1883,
+//   backend: ascoltatore,
+//   persistence: {
+//     factory: mosca.persistence.Mongo,
+//     url: "mongodb://mbare:ciao@ds253959.mlab.com:53959/mqtt"
+//   }
+// };
 
 ///////////// Init Database /////////////////
 
@@ -41,8 +41,8 @@ MongoClient.connect(broker_url, function(err, db) {
 })
 
 
-var server = new mosca.Server(moscaSettings);
-server.on('ready', setup);
+// var server = new mosca.Server(moscaSettings);
+// server.on('ready', setup);
 
 
 ////////////////// APP //////////////////
@@ -62,28 +62,28 @@ app.get("/messages",  function(req, res){
 
 ///////////// Manage Received Messages //////////////
 
-server.on('clientConnected', function(client) {
-  console.log('client connected', client.id);   
-});
+// server.on('clientConnected', function(client) {
+//   console.log('client connected', client.id);   
+// });
 
 // fired when a message is received
-server.on('published', function(packet, client) {
-  var message;
-  message = {
-    topic: packet.topic,
-    payload: packet.payload.toString()
-  };
-  console.log('Published', message);  
-  brokerDbo.collection("messages").insertOne(message, function(err, res) {
-    if (err) throw err;
-    console.log("message saved");
-  });
-});
+// server.on('published', function(packet, client) {
+//   var message;
+//   message = {
+//     topic: packet.topic,
+//     payload: packet.payload.toString()
+//   };
+//   console.log('Published', message);  
+//   brokerDbo.collection("messages").insertOne(message, function(err, res) {
+//     if (err) throw err;
+//     console.log("message saved");
+//   });
+// });
 
 // fired when the mqtt server is ready
-function setup() {
-  console.log('Mosca server is up and running')
-}
+// function setup() {
+//   console.log('Mosca server is up and running')
+// }
 
 //////// Instatiate the app ///////////
 
