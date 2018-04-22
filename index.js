@@ -55,7 +55,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
-app.get("/",  function(req, res){
+app.get("/messages",  function(req, res){
 	let query = brokerDbo.collection("messages").find({}).toArray(function(err, result) {
     	if (err) throw err;
     	res.send(result);
