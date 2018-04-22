@@ -5,16 +5,29 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const process = require("process");
-var MongoClient = require('mongodb').MongoClient;
-var mqtt = require('mqtt');
 
+var mqtt = require('mqtt');
+var firebase = require('firebase');
+
+const watering_topic = "bazzini/pizerow/watering";
+const config_topic = "bazzini/pizerow/config";
+const weather_topic = "weather";
 
 ////////////////// SETTINGS /////////////////
-//MongoDb url on mlab
-var db_url = "mongodb://mbare:ciao@ds239177.mlab.com:39177/broker_db";
+
 //CloudMQTT broker url on heroku
 var mqtt_url = 'mqtt://bqmqptlw:bUouMU6bIdPx@m14.cloudmqtt.com:10671';
-var brokerDbo;
+
+// Set the configuration for your app
+  var config = {
+    apiKey: "AIzaSyDhQFcJ-ZX5s-jRJd1coiF3EX4z0ghp6R8",
+    authDomain: "iot-project-backend.firebaseapp.com",
+    databaseURL: "https://iot-project-backend.firebaseio.com",
+    storageBucket: "iot-project-backend.appspot.com"
+  };
+  firebase.initializeApp(config);
+
+var database = firebase.database();
 
 ///////////// Init mqtt client ///////////////
 
@@ -22,16 +35,10 @@ var client = mqtt.connect(mqtt_url)
 
 client.on('connect', function () {
   //here we subscribe to all our topic
-  client.subscribe('new/prova')
+  client.subscribe(watering_topic);
+  client.subscribe(config_topic);
+  client.subscribe(weather_topic);
   console.log("subscribed successfully")
-})
-
-///////////// Init Database /////////////////
-
-MongoClient.connect(db_url, function(err, db) {
-  if(err) throw err;
-  brokerDbo = db.db("broker_db");
-  console.log("connected to broker db");
 })
 
 ///////////// Handle App ///////////////////
@@ -40,28 +47,59 @@ app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get("/messages",  function(req, res){
-	let query = brokerDbo.collection("messages").find({}).toArray(function(err, result) {
-    	if (err) throw err;
-    	res.send(result);
-  	});
+app.get("/" + watering_topic ,  function(req, res){
+
+  database.ref(watering_topic).once('value', function(snapshot){
+    res.send(snapshot.val());
+  });
+});
+
+app.get("/" + config_topic,  function(req, res){
+
+  database.ref(config_topic).once('value', function(snapshot){
+    res.send(snapshot.val());
+  });
+});
+
+app.get("/" + weather_topic, function(req, res){
+
+  database.ref(weather_topic).once('value', function(snapshot){
+    res.send(snapshot.val());
+  });
 });
 
 ///////////// Handle Received Messages //////////////
 
 client.on('message', function (topic, message) {
   // message is Buffer
-  var msg = {
-    topic: topic,
-    message: message
+  var msg = message.toString().split(',');
+  var payload;
+
+  if(topic == watering_topic){
+    payload = {
+      watering_init: msg[0],
+      watering_duration: msg[1]
+    }
   }
+  else if (topic == config_topic){
+    payload = {
+      frequency: msg[0],
+      time: msg[1]
+    }
+  }
+  else {
+    payload = {
+      degree: msg[0],
+      rain: msg[1],
+      humidity: msg[2],
+      wind: msg[3]
+    }
+  }
+
   console.log("Got new message! Topic: " + topic + "; Message: " + message)
-  brokerDbo.collection("messages").insertOne(msg, function(err, res) {
-     if (err) throw err;
-     console.log("message saved");
-  });
-  // client.end()
-})
+  var key = database.ref().child(topic).push().key;
+  database.ref(topic).child(key).set(payload);
+});
 
 //////// Instatiate the app ///////////
 
