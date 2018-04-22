@@ -1,0 +1,86 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-view1">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <div class="card">
+      <h1>Watering Data</h1>
+      <p>Ut labores minimum atomorum pro. Laudem tibique ut has.</p>
+      <canvas id="myChart" width="400" height="400"></canvas>
+
+    </div>
+  </template>
+
+  <script src="../bower_components/chart.js/dist/Chart.min.js"></script>
+  <script>
+    class MyView1 extends Polymer.Element {
+      static get is() { return 'my-view1'; }
+
+      ready() {
+        super.ready();
+
+        //ChartJs
+        var ctx = this.$.myChart.getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ["January", "February", "March", "April", "May", "June", "July"],
+                datasets: [{
+                    label: "Watering Durations",
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: [0, 10, 5, 2, 20, 30, 45],
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }]
+                }
+            }
+        });
+
+        // Get a reference to the database service
+        var database = firebase.database();
+        var freq_arr = [];
+        firebase.database().ref('bazzini/pizerow/watering').limitToLast(100).once('value').then(function(snapshot){
+          console.log(snapshot.val());
+          snapshot.forEach(function(childSnapshot) {
+            console.log(childSnapshot.val());
+            freq_arr.push(childSnapshot.val().watering_duration);
+          });
+          chart.data.datasets[0].data = freq_arr;
+          /*chart.data.labels.push("ciao");
+          chart.data.datasets.forEach((dataset) => {
+              dataset.data.push(5);
+          });*/
+          chart.update();
+
+        });
+      }
+    }
+
+    window.customElements.define(MyView1.is, MyView1);
+  </script>
+</dom-module>
