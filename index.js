@@ -6,13 +6,13 @@ const app = express();
 const bodyParser = require("body-parser");
 const process = require("process");
 var MongoClient = require('mongodb').MongoClient;
-var mosca = require('mosca');
+var mqtt = require('mqtt');
 
 
 ////////////////// SETTINGS /////////////////
 
 var broker_url = "mongodb://mbare:ciao@ds239177.mlab.com:39177/broker_db";
-var mqtt_url = "mongodb://mbare:ciao@ds253959.mlab.com:53959/mqtt";
+var mqtt_url = 'mqtt://bqmqptlw:bUouMU6bIdPx@m14.cloudmqtt.com:10671';
 var brokerDbo;
 
 // var ascoltatore = {
@@ -34,6 +34,8 @@ var brokerDbo;
 
 ///////////// Init Database /////////////////
 
+var client = mqtt.connect(mqtt_url)
+
 MongoClient.connect(broker_url, function(err, db) {
   if(err) throw err;
   brokerDbo = db.db("broker_db");
@@ -53,7 +55,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
-app.get("/messages",  function(req, res){
+app.get("/",  function(req, res){
 	let query = brokerDbo.collection("messages").find({}).toArray(function(err, result) {
     	if (err) throw err;
     	res.send(result);
@@ -61,6 +63,16 @@ app.get("/messages",  function(req, res){
 });
 
 ///////////// Manage Received Messages //////////////
+
+client.on('message', function (topic, message) {
+  // message is Buffer
+  console.log("Got new message! Topic: " + topic + "; Message: " + message)
+  brokerDbo.collection("messages").insertOne(message, function(err, res) {
+     if (err) throw err;
+     console.log("message saved");
+  });
+  // client.end()
+})
 
 // server.on('clientConnected', function(client) {
 //   console.log('client connected', client.id);   
