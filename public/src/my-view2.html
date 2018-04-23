@@ -11,7 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/iron-form/iron-form.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="shared-styles.html">
 
@@ -30,10 +30,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <iron-form id="form1" hidden$="[[!hideform]]">
         <form action="/config" method="post">
-          <div>Frequency</div>
-          <paper-slider class="freq" value="120" max="400" editable name="freq"></paper-slider>
-          <div>Duration</div>
-          <paper-slider class="time" value="2" max="100" editable name="time"></paper-slider>
+          <paper-input type="text" name="freq" value="Frequency"></paper-input>
+          <paper-input type="text" name="time" value="Duration"></paper-input>
           <br>
           <paper-checkbox name="device" value="pizerow" checked required>Bazzini/Pi Zero W</paper-checkbox><br>
           <paper-checkbox name="device" value="nucleo">Bazzini/Stm32 Nucleo</paper-checkbox>
