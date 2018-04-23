@@ -17,7 +17,13 @@
     "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0",
     "google-chart": "^2.0.0",
     "polymerfire": "firebase/polymerfire#^2.2.1",
-    "chart.js": "^2.7.2"
+    "chart.js": "^2.7.2",
+    "iron-form": "PolymerElements/iron-form#^2.3.0",
+    "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#^2.1.0",
+    "paper-slider": "PolymerElements/paper-slider#^2.0.6",
+    "paper-button": "PolymerElements/paper-button#^2.1.0",
+    "neon-animation": "PolymerElements/neon-animation#^2.2.1",
+    "paper-checkbox": "PolymerElements/paper-checkbox#^2.0.4"
   },
   "resolutions": {
     "polymer": "^2.0.0"

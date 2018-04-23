@@ -23,7 +23,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <div class="card">
       <h1>Watering Data</h1>
-      <p>Ut labores minimum atomorum pro. Laudem tibique ut has.</p>
+      <p>Below you can find the last 10 watering events</p>
       <canvas id="myChart" width="400" height="400"></canvas>
 
     </div>
@@ -32,52 +32,74 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <script src="../bower_components/chart.js/dist/Chart.min.js"></script>
   <script>
     class MyView1 extends Polymer.Element {
-      static get is() { return 'my-view1'; }
+      static get is() {
+        return 'my-view1';
+      }
+
+      generateChart(labels, data) {
+        //ChartJs
+        var ctx = this.$.myChart.getContext('2d');
+        var chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "Watering Durations",
+              backgroundColor: '#550044',
+              borderColor: 'rgb(255, 99, 132)',
+              data: data,
+            }]
+          },
+          options: {
+            scales: {
+              yAxes: [{
+                ticks: {
+                  beginAtZero: true
+                }
+              }]
+            }
+          }
+        });
+      }
+
+      convertTimestamp(unix_timestamp) {
+        var date = new Date(unix_timestamp * 1000);
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var month = months[date.getMonth()];
+        var day = date.getDate();
+        var hours = date.getHours();
+        var minutes = "0" + date.getMinutes();
+        return month + ' '  + day + ' - ' + hours + ':' + minutes.substr(-2);
+      }
+
 
       ready() {
         super.ready();
 
-        //ChartJs
-        var ctx = this.$.myChart.getContext('2d');
-        var chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ["January", "February", "March", "April", "May", "June", "July"],
-                datasets: [{
-                    label: "Watering Durations",
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    data: [0, 10, 5, 2, 20, 30, 45],
-                }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero:true
-                        }
-                    }]
-                }
-            }
-        });
-
+        var thisEl = this;
         // Get a reference to the database service
+        var data = [];
+        var labels = [];
         var database = firebase.database();
-        var freq_arr = [];
-        firebase.database().ref('bazzini/pizerow/watering').limitToLast(100).once('value').then(function(snapshot){
-          console.log(snapshot.val());
+        firebase.database().ref('bazzini/pizerow/watering').limitToLast(10).once('value').then(function(snapshot) {
           snapshot.forEach(function(childSnapshot) {
-            console.log(childSnapshot.val());
-            freq_arr.push(childSnapshot.val().watering_duration);
+            data.push({
+              x: Number(childSnapshot.val().watering_init),
+              y: Number(childSnapshot.val().watering_duration)
+            });
+            labels.push(thisEl.convertTimestamp(childSnapshot.val().watering_init));
           });
-          chart.data.datasets[0].data = freq_arr;
-          /*chart.data.labels.push("ciao");
-          chart.data.datasets.forEach((dataset) => {
-              dataset.data.push(5);
-          });*/
-          chart.update();
+          // chart.data.datasets[0].data = freq_arr;
+          // chart.data.labels.push("ciao");
+          // chart.data.datasets.forEach((dataset) => {
+          //     dataset.data.push(5);
+          // });
+          // chart.update();
+        }).then(function(res) {
+          thisEl.generateChart(labels, data);
+        })
 
-        });
+
       }
     }
 
