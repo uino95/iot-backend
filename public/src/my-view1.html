@@ -63,13 +63,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       convertTimestamp(unix_timestamp) {
-        var date = new Date(unix_timestamp * 1000);
-        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        var month = months[date.getMonth()];
-        var day = date.getDate();
-        var hours = date.getHours();
-        var minutes = "0" + date.getMinutes();
-        return month + ' '  + day + ' - ' + hours + ':' + minutes.substr(-2);
+        var date = new Date(unix_timestamp).toString();
+        return date.substring(4, 10) + ' ' + date.substring(16,21);
       }
 
 
