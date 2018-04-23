@@ -4,6 +4,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const process = require("process");
+const favicon = require('express-favicon');
 
 var mqtt = require('mqtt');
 var firebase = require('firebase');
@@ -44,6 +45,7 @@ client.on('connect', function() {
 
 ///////////// Handle App ///////////////////
 
+app.use(favicon(__dirname + '/public/images/favicon.ico'));
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
