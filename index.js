@@ -61,7 +61,8 @@ app.get("/devices", function(req, res) {
       devices[i] = x;
       i++;
     }
-    res.send(devices);
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify({"devices": devices}));
   });
 });
 
@@ -114,7 +115,7 @@ client.on('message', function(topic, message) {
         watering_duration: msg[1]
       }
     } else if (topic.indexOf(config_topic) != -1) {
-      payload = { 
+      payload = {
         frequency: msg[0],
         time: msg[1]
       }

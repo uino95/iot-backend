@@ -25,10 +25,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <p>Below you can find the last 10 watering events</p>
       <canvas id="myChart" width="400" height="400"></canvas>
 
-    </div>
+      <dom-repeat items="{{devices}}">
+      <template>
+        <div>First name: <span>{{item}}</span></div>
+      </template>
+  </dom-repeat>
+
+  </div>
   </template>
 
-  <script src="../bower_components/moment/min/moment.min.js"></script>
   <script src="../bower_components/chart.js/dist/Chart.min.js"></script>
   <script>
     class MyView1 extends Polymer.Element {
@@ -36,35 +41,53 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return 'my-view1';
       }
 
+      connectedCallback() {
+        super.connectedCallback();
+        var thisEl = this;
+        fetch('/devices')
+          .then(function(response) {
+            // console.log(response.json());
+            return response.json();
+          }).then(function(data) {
+            thisEl.devices = data.devices;
+          })
+      }
+
       static get properties() {
         return {
           chart: {
             type: Object
+          },
+          devices: {
+            type: Array,
+            notify: true
+          },
+          devices2: {
+            type: Array,
+            notify: true,
+            value: function() {
+              return ['ciao', 'ehehe'];
+            }
           }
         }
       }
 
       updateChart(snapshot) {
-        var numOfPoints = 10;
         var chart = this.chart;
         var thisEl = this;
-        var valuesToSkip = snapshot.numChildren() - numOfPoints - 1;
-        console.log(valuesToSkip);
+        chart.data.datasets[0].data = [];
+        chart.data.labels = [];
         snapshot.forEach(function(childSnapshot) {
-          valuesToSkip--;
-          if (valuesToSkip < 0) {
-            console.log(childSnapshot.val());
-            chart.data.datasets[0].data.push({
-              x: Number(childSnapshot.val().watering_init),
-              y: Number(childSnapshot.val().watering_duration)
-            });
-            chart.data.labels.push(thisEl.convertTimestamp(childSnapshot.val().watering_init));
-          }
+          console.log(childSnapshot.val());
+          chart.data.datasets[0].data.push({
+            x: Number(childSnapshot.val().watering_init),
+            y: Number(childSnapshot.val().watering_duration)
+          });
+          chart.data.labels.push(thisEl.convertTimestamp(childSnapshot.val().watering_init));
         });
         chart.update();
       }
 
-      //TODO get devices and add one dataset for each
       generateChart(labels, data) {
         var thisEl = this;
 
