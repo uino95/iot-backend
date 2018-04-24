@@ -52,28 +52,6 @@ app.use(bodyParser.urlencoded({
 
 ///////////// APP.GET ///////////////////
 
-//TODO make them adapt to mutliple devices
-// app.get("/" + watering_topic, function(req, res) {
-
-//   database.ref(watering_topic).once('value', function(snapshot) {
-//     res.send(snapshot.val());
-//   });
-// });
-
-// app.get("/" + config_topic, function(req, res) {
-
-//   database.ref(config_topic).once('value', function(snapshot) {
-//     res.send(snapshot.val());
-//   });
-// });
-
-// app.get("/" + weather_topic, function(req, res) {
-
-//   database.ref(weather_topic).once('value', function(snapshot) {
-//     res.send(snapshot.val());
-//   });
-// });
-
 // retrieve all the device id present in the database
 app.get("/devices", function(req, res) {
   database.ref("bazzini").once('value', function(snapshot) {
@@ -83,7 +61,7 @@ app.get("/devices", function(req, res) {
       devices[i] = x;
       i++;
     }
-    res.send(devices)
+    res.send(devices);
   });
 });
 
@@ -112,7 +90,6 @@ client.on('message', function(topic, message) {
 
   if (topic.indexOf(initialconfig_topic) != -1) {
     let freq, time;
-    //TODO replace with a default config topic instead of the last configuration of itself
     database.ref(topic.replace(initialconfig_topic, config_topic)).limitToLast(1).once('value', function(snapshot) {
       console.log(snapshot.val());
       snapshot.forEach(function(childSnapshot) {
@@ -121,10 +98,10 @@ client.on('message', function(topic, message) {
       });
       //default configuration at first connection
       if (isNaN(freq)){
-        freq = "3";
+        freq = "60";
       }
       if (isNaN(time)){
-        time = "0.5"
+        time = "1";
       }
       client.publish(topic.replace(initialconfig_topic, config_topic), freq + ',' + time, {
          qos: '1'
