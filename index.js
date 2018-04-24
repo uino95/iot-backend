@@ -57,22 +57,30 @@ app.get("/devices", function(req, res) {
   database.ref("bazzini").once('value', function(snapshot) {
     var devices = [];
     var i = 0;
-    for (x in snapshot.val()){
+    for (x in snapshot.val()) {
       devices[i] = x;
       i++;
     }
     res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify({"devices": devices}));
+    res.send(JSON.stringify({
+      "devices": devices
+    }));
   });
 });
 
 ///////////////// APP.POST //////////////////
 
-app.post('/config', function(req, res) {
 
+
+app.post('/config', function(req, res) {
   console.log("config post received");
-  client.publish("bazzini/" + req.body.device + "/" + config_topic, req.body.freq + ',' + req.body.time, {
-    qos: '1'
+  var keys = Object.keys(req.body);
+  keys.forEach(function(item){
+    if (item != "freq" && item != "time") {
+      client.publish("bazzini/" + req.body[[item]] + "/" + config_topic, req.body.freq + ',' + req.body.time, {
+        qos: '1'
+      });
+    }
   });
   res.writeHead(200, {
     'Content-Type': 'text/html'
@@ -98,14 +106,14 @@ client.on('message', function(topic, message) {
         time = childSnapshot.val().time;
       });
       //default configuration at first connection
-      if (isNaN(freq)){
+      if (isNaN(freq)) {
         freq = "60";
       }
-      if (isNaN(time)){
+      if (isNaN(time)) {
         time = "1";
       }
       client.publish(topic.replace(initialconfig_topic, config_topic), freq + ',' + time, {
-         qos: '1'
+        qos: '1'
       });
     });
   } else {

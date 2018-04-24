@@ -33,9 +33,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <paper-input label="Frequency" type="text" name="freq" value="120"></paper-input>
           <paper-input label="Duration" type="text" name="time" value="1"></paper-input>
           <br>
-          <paper-checkbox name="device" value="pizerow" checked>Bazzini/Pi Zero W</paper-checkbox><br>
-          <paper-checkbox name="device" value="nucleo">Bazzini/Stm32 Nucleo</paper-checkbox>
-          <br><br>
+
+          <dom-repeat items="{{devices}}">
+            <template>
+              <paper-checkbox name="device[[index]]" value="{{item}}">Bazzini/{{item}}</paper-checkbox><br>
+            </template>
+          </dom-repeat>
+
+          <br>
           <paper-button disabled$="[[submitBtn]]" raised on-click="submitform">Submit</paper-button>
         </form>
       </iron-form>
@@ -58,6 +63,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           submitBtn: {
             type: Boolean,
             value: false
+          },
+          devices: {
+            type: Array,
+            notify: true
           }
         }
       }
@@ -83,6 +92,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
           console.log("submitted");
         });
+
+        fetch('/devices')
+          .then(function(response) {
+            return response.json();
+          }).then(function(data) {
+            thisEl.devices = data.devices;
+          })
+
       }
 
       submitform() {
