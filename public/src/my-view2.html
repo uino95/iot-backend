@@ -28,18 +28,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <h1>Device Config</h1>
       <p>You can either let the server guess the right frequency and time duration of waterings, or you can disable it and choose to manually set those values by yourself</p>
 
-      <iron-form id="form1" hidden$="[[!hideform]]">
-        <form action="/config" method="post">
-          <paper-input label="Frequency" type="number" name="freq" value="120"></paper-input>
-          <paper-input label="Duration" type="number" name="time" value="1"></paper-input>
+      <iron-form id="form1">
+        <form action="/config" method="post" hidden$="[[hideform]]">
+          <paper-input label="Frequency" type="text" name="freq" value="120"></paper-input>
+          <paper-input label="Duration" type="text" name="time" value="1"></paper-input>
           <br>
           <paper-checkbox name="device" value="pizerow" checked>Bazzini/Pi Zero W</paper-checkbox><br>
           <paper-checkbox name="device" value="nucleo">Bazzini/Stm32 Nucleo</paper-checkbox>
           <br><br>
-          <paper-button raised on-click="submitform">Submit</paper-button>
+          <paper-button disabled$="[[submitBtn]]" raised on-click="submitform">Submit</paper-button>
         </form>
       </iron-form>
-      <div id="formdone" style="display:none;">Config Done!</div>
+      <h2 id="formdone" hidden$="[[!hideform]]">Config Done!</h2>
     </div>
   </template>
 
@@ -52,6 +52,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       static get properties() {
         return {
           hideform: {
+            type: Boolean,
+            value: false
+          },
+          submitBtn: {
             type: Boolean,
             value: false
           }
@@ -69,11 +73,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         const thisEl = this;
         form.addEventListener('iron-form-presubmit', function(event) {
           console.log(form.serializeForm());
-          thisEl.hideform = true;
+          thisEl.submitBtn = true;
         });
         form.addEventListener('iron-form-response', function(e) {
-          console.log("alla grande");
-          // this.querySelector('.output').innerHTML = JSON.stringify(response, null, 2);
+          //TODO improve the way we check the response is successfull
+          if (e.detail != null) {
+            thisEl.hideform = true;
+            thisEl.submitBtn = false;
+          }
+          console.log("submitted");
         });
       }
 

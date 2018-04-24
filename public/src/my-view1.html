@@ -16,7 +16,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <style include="shared-styles">
       :host {
         display: block;
-
         padding: 10px;
       }
     </style>
@@ -29,6 +28,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </div>
   </template>
 
+  <script src="../bower_components/moment/min/moment.min.js"></script>
   <script src="../bower_components/chart.js/dist/Chart.min.js"></script>
   <script>
     class MyView1 extends Polymer.Element {
@@ -36,16 +36,46 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return 'my-view1';
       }
 
+      static get properties() {
+        return {
+          chart: {
+            type: Object
+          }
+        }
+      }
+
+      updateChart(snapshot) {
+        var numOfPoints = 10;
+        var chart = this.chart;
+        var thisEl = this;
+        var valuesToSkip = snapshot.numChildren() - numOfPoints - 1;
+        console.log(valuesToSkip);
+        snapshot.forEach(function(childSnapshot) {
+          valuesToSkip--;
+          if (valuesToSkip < 0) {
+            console.log(childSnapshot.val());
+            chart.data.datasets[0].data.push({
+              x: Number(childSnapshot.val().watering_init),
+              y: Number(childSnapshot.val().watering_duration)
+            });
+            chart.data.labels.push(thisEl.convertTimestamp(childSnapshot.val().watering_init));
+          }
+        });
+        chart.update();
+      }
+
+      //TODO get devices and add one dataset for each
       generateChart(labels, data) {
+        var thisEl = this;
+
         //ChartJs
         var ctx = this.$.myChart.getContext('2d');
-        var chart = new Chart(ctx, {
-          type: 'line',
+        this.chart = new Chart(ctx, {
+          type: 'bar',
           data: {
             labels: labels,
             datasets: [{
-              label: "Watering Durations",
-              backgroundColor: '#550044',
+              label: "PiZeroW",
               borderColor: 'rgb(255, 99, 132)',
               data: data,
             }]
@@ -60,11 +90,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             }
           }
         });
+        //Firebase Data Listener
+        setTimeout(function() {
+          var listenerRef = firebase.database().ref('bazzini/pizerow/watering').limitToLast(10);
+          listenerRef.on('value', function(snapshot) {
+            thisEl.updateChart(snapshot)
+          });
+        }, 1000);
       }
 
       convertTimestamp(unix_timestamp) {
         var date = new Date(unix_timestamp).toString();
-        return date.substring(4, 10) + ' ' + date.substring(16,21);
+        return date.substring(4, 10) + ' ' + date.substring(16, 21);
       }
 
 
@@ -76,14 +113,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var data = [];
         var labels = [];
         var database = firebase.database();
-        firebase.database().ref('bazzini/pizerow/watering').limitToLast(10).once('value').then(function(snapshot) {
-          snapshot.forEach(function(childSnapshot) {
-            data.push({
-              x: Number(childSnapshot.val().watering_init),
-              y: Number(childSnapshot.val().watering_duration)
-            });
-            labels.push(thisEl.convertTimestamp(childSnapshot.val().watering_init));
-          });
+        firebase.database().ref('bazzini/pizerow/watering').limitToLast(1).once('value').then(function(snapshot) {
+          // snapshot.forEach(function(childSnapshot) {
+          //   data.push({
+          //     x: Number(childSnapshot.val().watering_init),
+          //     y: Number(childSnapshot.val().watering_duration)
+          //   });
+          //   labels.push(thisEl.convertTimestamp(childSnapshot.val().watering_init));
+          // });
           // chart.data.datasets[0].data = freq_arr;
           // chart.data.labels.push("ciao");
           // chart.data.datasets.forEach((dataset) => {
@@ -93,8 +130,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }).then(function(res) {
           thisEl.generateChart(labels, data);
         })
-
-
       }
     }
 
