@@ -12,7 +12,15 @@ http://polymer.github.io/PATENTS.txt -->
     <style include="shared-styles">
       :host {
         display: block;
-        padding: 10px;
+        padding: 5px;
+      }
+      paper-tabs {
+        --paper-tabs-selection-bar-color: var(--google-yellow-500);
+        --paper-tabs-container: {
+          background-color: var(--google-blue-500);
+          color: white;
+          font-weight: bold;
+        };
       }
     </style>
 
@@ -31,7 +39,7 @@ http://polymer.github.io/PATENTS.txt -->
       <iron-pages selected="{{current}}">
         <dom-repeat items="{{devices}}">
           <template>
-            <div style="width:400px; height:500px">
+            <div>
               <br>
               <canvas id="chart_{{item}}" width="400" height="400"></canvas>
             </div>
@@ -97,7 +105,9 @@ http://polymer.github.io/PATENTS.txt -->
             datasets: [
               {
                 label: name,
-                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgb(255, 255, 204)',
+                borderColor: 'rgb(255, 204, 0)',
+                borderWidth: '1',
                 data: data
               }
             ]
