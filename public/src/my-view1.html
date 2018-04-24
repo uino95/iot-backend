@@ -1,14 +1,10 @@
-<!--
-@license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
+<!-- @license Copyright (c) 2016 The Polymer Project Authors. All rights reserved. This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt The complete set of authors may be found at
+http://polymer.github.io/AUTHORS.txt The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt Code distributed by Google as part of the polymer project is also subject to an additional IP rights grant found at
+http://polymer.github.io/PATENTS.txt -->
 
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-view1">
@@ -23,15 +19,27 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div class="card">
       <h1>Watering Data</h1>
       <p>Below you can find the last 10 watering events</p>
-      <canvas id="myChart" width="400" height="400"></canvas>
 
-      <dom-repeat items="{{devices}}">
-      <template>
-        <div>First name: <span>{{item}}</span></div>
-      </template>
-  </dom-repeat>
+      <paper-tabs selected="{{current}}" noink="noink">
+        <dom-repeat items="{{devices}}">
+          <template>
+            <paper-tab>{{item}}</paper-tab>
+          </template>
+        </dom-repeat>
+      </paper-tabs>
 
-  </div>
+      <iron-pages selected="{{current}}">
+        <dom-repeat items="{{devices}}">
+          <template>
+            <div style="width:400px; height:500px">
+              <br>
+              <canvas id="chart_{{item}}" width="400" height="400"></canvas>
+            </div>
+          </template>
+        </dom-repeat>
+      </iron-pages>
+
+    </div>
   </template>
 
   <script src="../bower_components/chart.js/dist/Chart.min.js"></script>
@@ -43,14 +51,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       connectedCallback() {
         super.connectedCallback();
-        var thisEl = this;
-        fetch('/devices')
-          .then(function(response) {
-            // console.log(response.json());
-            return response.json();
-          }).then(function(data) {
-            thisEl.devices = data.devices;
-          })
       }
 
       static get properties() {
@@ -60,14 +60,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           },
           devices: {
             type: Array,
-            notify: true
-          },
-          devices2: {
-            type: Array,
             notify: true,
-            value: function() {
-              return ['ciao', 'ehehe'];
-            }
+            value: []
+          },
+          current: {
+            value: 0
           }
         }
       }
@@ -77,8 +74,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var thisEl = this;
         chart.data.datasets[0].data = [];
         chart.data.labels = [];
-        snapshot.forEach(function(childSnapshot) {
-          console.log(childSnapshot.val());
+        chart.resize();
+        snapshot.forEach(function (childSnapshot) {
           chart.data.datasets[0].data.push({
             x: Number(childSnapshot.val().watering_init),
             y: Number(childSnapshot.val().watering_duration)
@@ -88,38 +85,40 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         chart.update();
       }
 
-      generateChart(labels, data) {
+      generateChart(labels, data, name) {
         var thisEl = this;
 
         //ChartJs
-        var ctx = this.$.myChart.getContext('2d');
+        var ctx = this.shadowRoot.querySelector('#chart_' + name).getContext('2d');
         this.chart = new Chart(ctx, {
           type: 'bar',
           data: {
             labels: labels,
-            datasets: [{
-              label: "PiZeroW",
-              borderColor: 'rgb(255, 99, 132)',
-              data: data,
-            }]
+            datasets: [
+              {
+                label: name,
+                borderColor: 'rgb(255, 99, 132)',
+                data: data
+              }
+            ]
           },
           options: {
             scales: {
-              yAxes: [{
-                ticks: {
-                  beginAtZero: true
+              yAxes: [
+                {
+                  ticks: {
+                    beginAtZero: true
+                  }
                 }
-              }]
+              ]
             }
           }
         });
         //Firebase Data Listener
-        setTimeout(function() {
-          var listenerRef = firebase.database().ref('bazzini/pizerow/watering').limitToLast(10);
-          listenerRef.on('value', function(snapshot) {
-            thisEl.updateChart(snapshot)
-          });
-        }, 1000);
+        var listenerRef = firebase.database().ref('bazzini/' + name + '/watering').limitToLast(10);
+        listenerRef.on('value', function (snapshot) {
+          thisEl.updateChart(snapshot)
+        });
       }
 
       convertTimestamp(unix_timestamp) {
@@ -127,32 +126,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return date.substring(4, 10) + ' ' + date.substring(16, 21);
       }
 
-
       ready() {
         super.ready();
 
         var thisEl = this;
-        // Get a reference to the database service
-        var data = [];
-        var labels = [];
-        var database = firebase.database();
-        firebase.database().ref('bazzini/pizerow/watering').limitToLast(1).once('value').then(function(snapshot) {
-          // snapshot.forEach(function(childSnapshot) {
-          //   data.push({
-          //     x: Number(childSnapshot.val().watering_init),
-          //     y: Number(childSnapshot.val().watering_duration)
-          //   });
-          //   labels.push(thisEl.convertTimestamp(childSnapshot.val().watering_init));
-          // });
-          // chart.data.datasets[0].data = freq_arr;
-          // chart.data.labels.push("ciao");
-          // chart.data.datasets.forEach((dataset) => {
-          //     dataset.data.push(5);
-          // });
-          // chart.update();
-        }).then(function(res) {
-          thisEl.generateChart(labels, data);
+        fetch('/devices').then(function (response) {
+          return response.json();
+        }).then(function (data) {
+          thisEl.devices = data.devices;
+        }).then(function () {
+          thisEl._createPropertyObserver('current', '_activeChanged', true);
+          var data = [];
+          var labels = [];
+          thisEl.generateChart([], [], thisEl.devices[thisEl.current]);
         })
+      }
+
+      _activeChanged(newValue, oldValue) {
+        this.chart.destroy();
+        this.generateChart([], [], this.devices[newValue]);
       }
     }
 
