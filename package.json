@@ -5,16 +5,19 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "./node_modules/bower/bin/bower install"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.18.2",
+    "bower": "^1.8.4",
     "express": "^4.16.3",
+    "express-favicon": "^2.0.0",
     "firebase": "^4.13.1",
     "mongodb": "^3.0.7",
-    "mosca": "^2.8.1",
+    "mqtt": "^2.17.0",
     "process": "^0.11.10"
   }
 }
