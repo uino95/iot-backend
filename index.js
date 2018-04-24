@@ -9,9 +9,10 @@ const favicon = require('express-favicon');
 var mqtt = require('mqtt');
 var firebase = require('firebase');
 
-const watering_topic = "bazzini/pizerow/watering";
-const config_topic = "bazzini/pizerow/config";
-const initialconfig_topic = "bazzini/pizerow/reqconfig";
+const multi_topic = "bazzini/#"
+const watering_topic = "watering";
+const config_topic = "config";
+const initialconfig_topic = "reqconfig";
 const weather_topic = "weather";
 
 ////////////////// SETTINGS /////////////////
@@ -36,14 +37,11 @@ var client = mqtt.connect(mqtt_url)
 
 client.on('connect', function() {
   //here we subscribe to all our topic
-  client.subscribe(watering_topic);
-  client.subscribe(config_topic);
-  client.subscribe(weather_topic);
-  client.subscribe(initialconfig_topic);
+  client.subscribe(multi_topic);
   console.log("subscribed successfully")
 })
 
-///////////// Handle App ///////////////////
+///////////// APP.USE ///////////////////
 
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
 app.use(express.static(__dirname + "/public"));
@@ -52,36 +50,49 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-app.get("/" + watering_topic, function(req, res) {
+///////////// APP.GET ///////////////////
 
-  database.ref(watering_topic).once('value', function(snapshot) {
-    res.send(snapshot.val());
+//TODO make them adapt to mutliple devices
+// app.get("/" + watering_topic, function(req, res) {
+
+//   database.ref(watering_topic).once('value', function(snapshot) {
+//     res.send(snapshot.val());
+//   });
+// });
+
+// app.get("/" + config_topic, function(req, res) {
+
+//   database.ref(config_topic).once('value', function(snapshot) {
+//     res.send(snapshot.val());
+//   });
+// });
+
+// app.get("/" + weather_topic, function(req, res) {
+
+//   database.ref(weather_topic).once('value', function(snapshot) {
+//     res.send(snapshot.val());
+//   });
+// });
+
+// retrieve all the device id present in the database
+app.get("/devices", function(req, res) {
+  database.ref("bazzini").once('value', function(snapshot) {
+    var devices = [];
+    var i = 0;
+    for (x in snapshot.val()){
+      devices[i] = x;
+      i++;
+    }
+    res.send(devices)
   });
 });
 
-app.get("/" + config_topic, function(req, res) {
-
-  database.ref(config_topic).once('value', function(snapshot) {
-    res.send(snapshot.val());
-  });
-});
-
-app.get("/" + weather_topic, function(req, res) {
-
-  database.ref(weather_topic).once('value', function(snapshot) {
-    res.send(snapshot.val());
-  });
-});
-
-/////////////////////////////////////////////
 ///////////////// APP.POST //////////////////
-/////////////////////////////////////////////
 
 app.post('/config', function(req, res) {
 
   console.log("config post received");
-
-  client.publish(config_topic, req.body.freq + ',' + req.body.time, {
+  client.publish("bazzini/" + req.body.device + "/" + config_topic, req.body.freq + ',' + req.body.time, {
     qos: '1'
   });
   res.writeHead(200, {
@@ -99,26 +110,34 @@ client.on('message', function(topic, message) {
   var payload;
   console.log("Got new message! Topic: " + topic + "; Message: " + message)
 
-  if (topic == initialconfig_topic) {
+  if (topic.indexOf(initialconfig_topic) != -1) {
     let freq, time;
-    database.ref(config_topic).limitToLast(1).once('value', function(snapshot) {
+    //TODO replace with a default config topic instead of the last configuration of itself
+    database.ref(topic.replace(initialconfig_topic, config_topic)).limitToLast(1).once('value', function(snapshot) {
       console.log(snapshot.val());
       snapshot.forEach(function(childSnapshot) {
         freq = childSnapshot.val().frequency;
         time = childSnapshot.val().time;
       });
-      client.publish(config_topic, freq + ',' + time, {
-        qos: '1'
+      //default configuration at first connection
+      if (isNaN(freq)){
+        freq = "3";
+      }
+      if (isNaN(time)){
+        time = "0.5"
+      }
+      client.publish(topic.replace(initialconfig_topic, config_topic), freq + ',' + time, {
+         qos: '1'
       });
     });
   } else {
-    if (topic == watering_topic) {
+    if (topic.indexOf(watering_topic) != -1) {
       payload = {
         watering_init: Date.now(),
         watering_duration: msg[1]
       }
-    } else if (topic == config_topic) {
-      payload = {
+    } else if (topic.indexOf(config_topic) != -1) {
+      payload = { 
         frequency: msg[0],
         time: msg[1]
       }
